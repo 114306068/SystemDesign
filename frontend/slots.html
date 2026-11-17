@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>場地空檔｜Gig Radar</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>Gig Radar <span>演出雷達</span></h1>
+    <nav>
+      <a href="index.html">演出查詢</a>
+      <a href="slots.html" class="active">場地空檔</a>
+      <a href="/docs" target="_blank">API 文件</a>
+    </nav>
+  </header>
+
+  <main>
+    <form id="search">
+      <label>地區 <select name="district"><option value="">全部</option></select></label>
+      <label><input type="checkbox" name="co_performance_only" value="true"> 只看共演招募</label>
+      <button type="submit">查詢</button>
+    </form>
+    <p id="status"></p>
+    <ul id="results" class="cards"></ul>
+  </main>
+
+  <script src="app.js"></script>
+  <script>
+    const form = document.getElementById('search');
+    fillSelect(form.district, '/api/districts');
+
+    async function run() {
+      const params = new URLSearchParams(new FormData(form));
+      for (const [k, v] of [...params]) if (!v) params.delete(k);
+      const slots = await api('/api/slots?' + params);
+      document.getElementById('status').textContent = `共 ${slots.length} 個可申請空檔`;
+      document.getElementById('results').innerHTML = slots.map(s => `
+        <li class="card">
+          <div class="date">${fmtDate(s.slot_date)} ${s.start_time.slice(0, 5)}–${s.end_time.slice(0, 5)}</div>
+          <h3>${esc(s.venue.name)}</h3>
+          <p>場租 ${s.last_minute_rent
+            ? `<s>NT$${money(s.rent)}</s> <strong class="deal">即期 NT$${money(s.last_minute_rent)}</strong>`
+            : `NT$${money(s.rent)}`}</p>
+          <p class="muted">${esc(s.venue.district)}｜容納 ${s.venue.capacity ?? '—'} 人
+            ${s.allow_co_performance ? `｜<span class="tag">共演 ${s.max_performers} 組</span>` : ''}</p>
+          ${s.apply_deadline ? `<p class="muted">申請截止 ${s.apply_deadline.replace('T', ' ').slice(0, 16)}</p>` : ''}
+          <button disabled title="3.3 受理預訂申請：待實作">申請此空檔</button>
+        </li>`).join('');
+    }
+    form.addEventListener('submit', ev => { ev.preventDefault(); run(); });
+    run();
+  </script>
+</body>
+</html>

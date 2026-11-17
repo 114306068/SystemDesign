@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gig Radar 演出雷達</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>Gig Radar <span>演出雷達</span></h1>
+    <nav>
+      <a href="index.html" class="active">演出查詢</a>
+      <a href="slots.html">場地空檔</a>
+      <a href="/docs" target="_blank">API 文件</a>
+    </nav>
+  </header>
+
+  <main>
+    <form id="search">
+      <label>從 <input type="date" name="date_from"></label>
+      <label>到 <input type="date" name="date_to"></label>
+      <label>地區 <select name="district"><option value="">全部</option></select></label>
+      <label>類型 <select name="genre"><option value="">全部</option></select></label>
+      <label>表演者 <input type="text" name="performer" placeholder="名稱或別名"></label>
+      <button type="submit">查詢</button>
+    </form>
+    <p id="status"></p>
+    <ul id="results" class="cards"></ul>
+  </main>
+
+  <script src="app.js"></script>
+  <script>
+    const form = document.getElementById('search');
+    fillSelect(form.district, '/api/districts');
+    fillSelect(form.genre, '/api/genres');
+
+    async function run() {
+      const params = new URLSearchParams(new FormData(form));
+      for (const [k, v] of [...params]) if (!v) params.delete(k);
+      const events = await api('/api/events?' + params);
+      document.getElementById('status').textContent = `共 ${events.length} 場演出`;
+      document.getElementById('results').innerHTML = events.map(e => `
+        <li class="card">
+          <div class="date">${fmtDate(e.event_date)} ${e.start_time ? e.start_time.slice(0, 5) : ''}</div>
+          <h3>${esc(e.title)}</h3>
+          <p>${e.performers.map(p => esc(p.name)).join('、')}</p>
+          <p class="muted">${esc(e.venue.name)}｜${esc(e.venue.district)}${e.genre ? '｜' + esc(e.genre) : ''}</p>
+          ${e.ticket_url ? `<a href="${esc(e.ticket_url)}" target="_blank" rel="noopener">前往購票 ↗</a>` : ''}
+        </li>`).join('');
+    }
+    form.addEventListener('submit', ev => { ev.preventDefault(); run(); });
+    run();
+  </script>
+</body>
+</html>

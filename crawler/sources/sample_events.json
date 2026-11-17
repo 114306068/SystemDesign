@@ -1,0 +1,41 @@
+[
+  {
+    "title": "冬日巡迴 台北站",
+    "venue_name": "北岸 LIVE HOUSE",
+    "date_text": "2026/12/05",
+    "time_text": "19:30",
+    "performers": ["霧島樂隊"],
+    "genre": "indie",
+    "ticket_url": "https://tickets.example.com/e/1001",
+    "source_url": "https://tickets.example.com/e/1001"
+  },
+  {
+    "title": "冬日巡迴 台北站（加場資訊）",
+    "venue_name": "北岸Live House",
+    "date_text": "12月5日(六)",
+    "time_text": "晚上7:30",
+    "performers": ["Kirishima Band"],
+    "genre": "indie",
+    "ticket_url": "https://tickets.example.com/e/1001",
+    "source_url": "https://venue.example.com/news/88"
+  },
+  {
+    "title": "週三爵士夜",
+    "venue_name": "公館地下室",
+    "date_text": "2026-12-09",
+    "time_text": "20:00",
+    "performers": ["藍調三重奏"],
+    "genre": "jazz",
+    "ticket_url": "https://tickets.example.com/e/1002",
+    "source_url": "https://tickets.example.com/e/1002"
+  },
+  {
+    "title": "新場館試營運",
+    "venue_name": "完全沒聽過的場地",
+    "date_text": "2026/12/20",
+    "time_text": "19:00",
+    "performers": ["新人樂團"],
+    "genre": "rock",
+    "source_url": "https://tickets.example.com/e/1003"
+  }
+]
