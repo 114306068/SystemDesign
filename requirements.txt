@@ -1,5 +1,5 @@
 fastapi>=0.115
-uvicorn[standard]>=0.30
+uvicorn>=0.30
 SQLAlchemy>=2.0
 PyMySQL>=1.1
 cryptography>=42      # PyMySQL 連 MySQL 8 預設認證需要
