@@ -1,7 +1,7 @@
 # Gig Radar 演出雷達｜ERD
 
 由期中報告的 DFD 七個資料儲存（D1–D7）展開成 19 張資料表。
-完整欄位定義以 `app/models/` 為準，`db/schema.sql` 由 `python -m scripts.export_schema` 自動產生。
+完整欄位定義以 `src/main/java/tw/gigradar/model/` 為準，`db/schema.sql` 由 `.\mvnw spring-boot:run "-Dspring-boot.run.arguments=export-schema"` 自動產生。
 
 ## 資料儲存 → 資料表對照
 
@@ -135,7 +135,7 @@ erDiagram
 
 ## 幾個設計決定（報告時可以講）
 
-1. **演出去重**：`events` 上有 `UNIQUE(venue_id, event_date, start_time)`，對應提案書「日期＋場館＋開演時間」規則。爬蟲沒抓到開演時間時，MySQL 的 UNIQUE 不會擋 NULL，所以 `app/services/dedup.py` 在程式裡再比一次。
+1. **演出去重**：`events` 上有 `UNIQUE(venue_id, event_date, start_time)`，對應提案書「日期＋場館＋開演時間」規則。爬蟲沒抓到開演時間時，MySQL 的 UNIQUE 不會擋 NULL，所以 `DedupService.findDuplicateEvent()` 在程式裡再比一次。
 2. **別名表**：`performer_aliases` 與 `venue_aliases` 處理「樂團名稱不一致」與「場館名稱對應」兩個爬蟲難點。
 3. **場館兩階段**：爬蟲先建立 `claim_status = unclaimed` 的場館；場地方認領後經管理者審核變成 `approved`，才能管理 `venue_slots`。
 4. **共演**：不另開資料表，`venue_slots.allow_co_performance` + `max_performers` 允許多組表演者申請同一空檔，成交場租平分寫在各自的 `match_requests.final_rent`。
