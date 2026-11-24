@@ -177,9 +177,13 @@ USE gig_radar;
         id integer not null auto_increment,
         created_at datetime(6) not null,
         display_name varchar(100) not null,
+        district varchar(20),
         email varchar(255) not null,
+        favorite_genre varchar(50),
         password_hash varchar(255) not null,
+        phone varchar(20),
         role enum ('admin','audience','performer','venue') not null,
+        updated_at datetime(6) not null,
         primary key (id)
     ) engine=InnoDB;
 

@@ -1,6 +1,7 @@
 package tw.gigradar.repository;
 
 import java.util.List;
+import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import tw.gigradar.model.Notification;
 
@@ -11,4 +12,6 @@ public interface NotificationRepository extends JpaRepository<Notification, Inte
     List<Notification> findByUserIdAndReadFalseOrderByCreatedAtDescIdDesc(Integer userId);
 
     List<Notification> findByEventId(Integer eventId);
+
+    Optional<Notification> findByIdAndUserId(Integer id, Integer userId);
 }

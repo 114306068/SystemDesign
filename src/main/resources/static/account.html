@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>我的帳號｜Gig Radar</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>Gig Radar <span>演出雷達</span></h1>
+    <nav>
+      <a href="index.html">演出查詢</a>
+      <a href="slots.html">場地空檔</a>
+      <a href="/docs" target="_blank">API 文件</a>
+    </nav>
+  </header>
+
+  <main>
+    <div class="panels">
+      <div>
+        <section class="panel">
+          <h2>我的通知 <span id="unread" class="tag"></span></h2>
+          <ul id="notifications" class="list"></ul>
+        </section>
+
+        <section class="panel">
+          <h2>我的追蹤</h2>
+          <ul id="follows" class="list"></ul>
+          <form id="follow-form" style="margin-top: .8rem">
+            <label>追蹤
+              <select name="target_type">
+                <option value="performer">表演者</option>
+                <option value="venue">場館</option>
+                <option value="genre">音樂風格</option>
+              </select>
+            </label>
+            <label>對象 <select name="target"></select></label>
+            <button type="submit">新增追蹤</button>
+          </form>
+          <p id="follow-msg" class="msg"></p>
+        </section>
+      </div>
+
+      <div>
+        <section class="panel">
+          <h2>個人資料</h2>
+          <form id="profile" class="stack">
+            <label>Email <input name="email" readonly></label>
+            <label>身分 <input name="role" readonly></label>
+            <label>暱稱 <input name="display_name" required maxlength="100"></label>
+            <label>電話 <input name="phone" placeholder="0912-345-678" maxlength="20"></label>
+            <label>所在地區 <select name="district"><option value="">（未設定）</option></select></label>
+            <label>喜好風格 <select name="favorite_genre"><option value="">（未設定）</option></select></label>
+            <button type="submit">儲存</button>
+          </form>
+          <p id="profile-msg" class="msg"></p>
+        </section>
+
+        <section class="panel">
+          <h2>修改密碼</h2>
+          <form id="password" class="stack">
+            <label>目前的密碼 <input type="password" name="current_password" required autocomplete="current-password"></label>
+            <label>新密碼（至少 8 個字元）<input type="password" name="new_password" required minlength="8" autocomplete="new-password"></label>
+            <button type="submit">修改密碼</button>
+          </form>
+          <p id="password-msg" class="msg"></p>
+        </section>
+
+        <button id="logout" class="secondary">登出</button>
+      </div>
+    </div>
+  </main>
+
+  <script src="app.js"></script>
+  <script>
+    const $ = id => document.getElementById(id);
+    const choices = {}; // 追蹤對象的下拉選單內容：performer / venue / genre
+
+    meReady.then(async me => {
+      if (!me) { location.href = 'login.html'; return; } // 沒登入就去登入頁
+      await loadChoices();
+      fillProfile(me);
+      loadFollows();
+      loadNotifications();
+    });
+
+    // ---------- 個人資料 ----------
+    function ensureOption(select, value) {
+      if (value && ![...select.options].some(o => o.value === value)) select.add(new Option(value, value));
+    }
+
+    function fillProfile(me) {
+      const f = $('profile');
+      f.email.value = me.email;
+      f.role.value = ROLE_LABEL[me.role] ?? me.role;
+      f.display_name.value = me.display_name;
+      f.phone.value = me.phone ?? '';
+      ensureOption(f.district, me.district);
+      f.district.value = me.district ?? '';
+      ensureOption(f.favorite_genre, me.favorite_genre);
+      f.favorite_genre.value = me.favorite_genre ?? '';
+    }
+
+    $('profile').addEventListener('submit', async ev => {
+      ev.preventDefault();
+      const f = ev.target;
+      try {
+        const me = await api('/api/me', { method: 'PUT', body: {
+          display_name: f.display_name.value, phone: f.phone.value,
+          district: f.district.value, favorite_genre: f.favorite_genre.value,
+        }});
+        fillProfile(me);
+        showMsg($('profile-msg'), '已儲存', true);
+      } catch (e) {
+        showMsg($('profile-msg'), e.message);
+      }
+    });
+
+    $('password').addEventListener('submit', async ev => {
+      ev.preventDefault();
+      try {
+        await api('/api/me/password', { method: 'PUT', body: Object.fromEntries(new FormData(ev.target)) });
+        ev.target.reset();
+        showMsg($('password-msg'), '密碼已更新', true);
+      } catch (e) {
+        showMsg($('password-msg'), e.message);
+      }
+    });
+
+    $('logout').addEventListener('click', async () => {
+      await api('/api/auth/logout', { method: 'POST' });
+      location.href = 'index.html';
+    });
+
+    // ---------- 我的追蹤 ----------
+    async function loadChoices() {
+      const [performers, venues, genres, districts] = await Promise.all([
+        api('/api/performers'), api('/api/venues'), api('/api/genres'), api('/api/districts')]);
+      choices.performer = performers.map(p => [p.id, p.name]);
+      choices.venue = venues.map(v => [v.id, `${v.name}（${v.district}）`]);
+      choices.genre = genres.map(g => [g, g]);
+      districts.forEach(d => $('profile').district.add(new Option(d, d)));
+      genres.forEach(g => $('profile').favorite_genre.add(new Option(g, g)));
+      fillTargets();
+    }
+
+    function fillTargets() {
+      const f = $('follow-form');
+      f.target.innerHTML = '';
+      for (const [value, label] of choices[f.target_type.value]) f.target.add(new Option(label, value));
+    }
+    $('follow-form').target_type.addEventListener('change', fillTargets);
+
+    function followLabel(f) {
+      if (f.target_type === 'performer') return `🎸 ${esc(f.performer.name)}`;
+      if (f.target_type === 'venue') return `🏠 ${esc(f.venue.name)}`;
+      return `🎵 風格：${esc(f.genre)}`;
+    }
+
+    async function loadFollows() {
+      const list = await api('/api/me/follows');
+      $('follows').innerHTML = list.length ? list.map(f => `
+        <li><span>${followLabel(f)}</span>
+            <button class="secondary" onclick="unfollow(${f.id})">取消追蹤</button></li>`).join('')
+        : '<li class="empty">還沒有追蹤任何表演者、場館或風格</li>';
+    }
+
+    async function unfollow(id) {
+      await api(`/api/me/follows/${id}`, { method: 'DELETE' });
+      loadFollows();
+    }
+
+    $('follow-form').addEventListener('submit', async ev => {
+      ev.preventDefault();
+      const f = ev.target, type = f.target_type.value, value = f.target.value;
+      const body = { target_type: type };
+      if (type === 'performer') body.performer_id = Number(value);
+      else if (type === 'venue') body.venue_id = Number(value);
+      else body.genre = value;
+      try {
+        await api('/api/me/follows', { method: 'POST', body });
+        showMsg($('follow-msg'), '已新增追蹤，之後有新演出會通知你', true);
+        loadFollows();
+      } catch (e) {
+        showMsg($('follow-msg'), e.message);
+      }
+    });
+
+    // ---------- 我的通知 ----------
+    async function loadNotifications() {
+      const list = await api('/api/me/notifications');
+      const unread = list.filter(n => !n.is_read).length;
+      $('unread').textContent = unread ? `${unread} 則未讀` : '';
+      $('notifications').innerHTML = list.length ? list.map(n => `
+        <li class="${n.is_read ? '' : 'unread'}">
+          <span>${esc(n.message)}<br><span class="muted">${n.created_at.replace('T', ' ').slice(0, 16)}</span></span>
+          ${n.is_read ? '' : `<button class="secondary" onclick="markRead(${n.id})">標為已讀</button>`}
+        </li>`).join('')
+        : '<li class="empty">目前沒有通知。追蹤的表演者、場館或風格有新演出時會出現在這裡。</li>';
+    }
+
+    async function markRead(id) {
+      await api(`/api/me/notifications/${id}/read`, { method: 'POST' });
+      loadNotifications();
+    }
+  </script>
+</body>
+</html>

@@ -33,6 +33,8 @@ macOS / Linux 把 `.\mvnw` 換成 `./mvnw`、`copy` 換成 `cp`。
 - 前端：<http://127.0.0.1:8000/>（演出查詢）、<http://127.0.0.1:8000/slots.html>（場地空檔）
 - API 文件（可直接在網頁上試打）：<http://127.0.0.1:8000/docs>
 - 示範帳號密碼皆為 `demo1234`：`audience@demo.tw`、`band@demo.tw`、`venue@demo.tw`、`admin@demo.tw`
+- 登入：<http://127.0.0.1:8000/login.html>，登入後右上角進「我的帳號」看通知、管理追蹤、改個人資料
+- 在 /docs 試需要登入的 API：先在同一個瀏覽器登入網站，再回 /docs 按 Try it out
 
 測試不需要 MySQL（用 H2 記憶體資料庫）：`.\mvnw test`
 
@@ -49,13 +51,17 @@ src/main/java/tw/gigradar/
   dto/                       API 回傳格式（決定哪些欄位給外面看）
   web/
     EventController          2.1 查詢演出                    ✅
-    FollowController         2.2 設定追蹤 / 2.3 通知         ◐ 看通知已完成
+    AuthController           註冊 / 登入（登出由 SecurityConfig 處理）✅
+    MeController             我的帳號：個人資料、改密碼、2.2 追蹤、2.3 通知 ✅
     MatchingController       3.0 檔期與媒合                  ◐ 查空檔已完成
     MerchController          4.0 周邊預購                    ◐ 商品列表已完成
     BillingController        5.0 抽成與推廣                  ◐ 抽成規則查詢已完成
     CatalogController        場館 / 表演者 / 地區 / 類型下拉選單
     EventSpecs               動態查詢條件（有填才加進 WHERE）
+  security/                  Spring Security 設定：Session 登入、CSRF、哪些 API 要登入 / 限管理者
   service/
+    AccountService           註冊、個人資料、改密碼
+    FollowService            2.2 追蹤 / 取消、2.3 我的通知、標為已讀
     DedupService             1.3 去重（日期＋場館＋開演時間）與別名比對
     NotifyService            2.3 新演出通知
     BillingService           5.0 取得目前生效的抽成規則
@@ -69,7 +75,7 @@ src/main/java/tw/gigradar/
 src/main/resources/
   application.properties     設定（資料庫帳密從 .env 讀）
   application-*.properties   各工作（seed / crawl / export-schema）專用設定
-  static/                    前端：index.html、slots.html、app.js、style.css
+  static/                    前端：index、slots、login（登入註冊）、account（我的帳號）、app.js、style.css
   crawler/sample_events.json 範例爬蟲資料
 src/test/java/               JUnit 測試
 db/schema.sql                MySQL DDL（自動產生，交 ERD 作業可附）
@@ -97,9 +103,9 @@ docs/ERD.md                  ERD（Mermaid，GitHub 上直接顯示圖）與設�
 
 核心流程：**空檔上架 → 媒合 → 演出上架 → 通知追蹤者 → 周邊取貨**
 
-- [ ] 登入（目前 API 用網址上的 user_id，之後改成登入後取得）
+- [x] 登入 / 註冊、個人資料
 - [ ] 3.1 / 3.3 / 3.4 / 3.5 媒合流程（成交時建立 Event 並呼叫 `NotifyService.notifyFollowers`）
-- [ ] 2.2 新增 / 取消追蹤
+- [x] 2.2 新增 / 取消追蹤、2.3 我的通知
 - [ ] 4.1–4.3 周邊上架、預購、取貨憑證與取貨清單
 - [ ] 5.1 成交時寫入 transactions 抽成；5.3 模擬付款
 - [ ] 第一個真實爬蟲來源 PoC

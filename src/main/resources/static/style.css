@@ -27,3 +27,21 @@ button:disabled { background: #bbb; cursor: not-allowed; }
 .deal { color: var(--accent); }
 .tag { background: #fff0e6; color: var(--accent); padding: 0 .4rem; border-radius: 4px; }
 .card a { color: var(--accent); }
+
+/* ---- 登入 / 我的帳號 ---- */
+.panels { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.2rem; align-items: start; }
+.panel { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 1rem 1.2rem; margin-bottom: 1.2rem; }
+.panel h2 { margin: 0 0 .8rem; font-size: 1.1rem; }
+.panel form { border: 0; padding: 0; background: none; }
+.panel form.stack { flex-direction: column; align-items: stretch; }
+.msg { margin: .6rem 0 0; font-size: .9rem; min-height: 1.2em; }
+.msg.error { color: #c92a2a; }
+.msg.ok { color: #2b8a3e; }
+.list { list-style: none; padding: 0; margin: 0; }
+.list li { display: flex; justify-content: space-between; align-items: center; gap: 1rem;
+  padding: .6rem 0; border-bottom: 1px solid var(--line); }
+.list li:last-child { border-bottom: 0; }
+.list li.unread { font-weight: 600; }
+button.secondary { background: transparent; color: var(--accent); border: 1px solid var(--accent); padding: .3rem .8rem; }
+.empty { color: var(--muted); }
+input[readonly] { background: var(--bg); color: var(--muted); }

@@ -1,6 +1,7 @@
 package tw.gigradar;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -103,17 +104,28 @@ class ApiTest {
     }
 
     @Test
-    void currentCommissionRules() throws Exception {
+    void currentCommissionRulesForAdmin() throws Exception {
+        String body = mvc.perform(get("/api/admin/commission-rules/current").with(user("admin@demo.tw").roles("ADMIN")))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
         Set<String> types = new HashSet<>();
-        for (JsonNode r : each(getJson("/api/admin/commission-rules/current"))) {
+        for (JsonNode r : each(json.readTree(body))) {
             types.add(r.get("rule_type").asText());
         }
         assertThat(types).containsExactlyInAnyOrder("match", "merch");
     }
 
     @Test
+    void adminApiIsClosedToOthers() throws Exception {
+        mvc.perform(get("/api/admin/commission-rules/current")).andExpect(status().isUnauthorized());
+        mvc.perform(get("/api/admin/commission-rules/current").with(user("audience@demo.tw").roles("AUDIENCE")))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
     void frontendIsServed() throws Exception {
         mvc.perform(get("/index.html")).andExpect(status().isOk());
         mvc.perform(get("/slots.html")).andExpect(status().isOk());
+        mvc.perform(get("/login.html")).andExpect(status().isOk());
+        mvc.perform(get("/account.html")).andExpect(status().isOk());
     }
 }

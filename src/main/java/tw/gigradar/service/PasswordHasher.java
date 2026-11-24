@@ -28,8 +28,8 @@ public final class PasswordHasher {
     }
 
     public static boolean verify(String password, String stored) {
-        String[] parts = stored.split("\\$");
-        if (parts.length != 4) return false;
+        String[] parts = stored == null ? new String[0] : stored.split("\\$");
+        if (parts.length != 4 || !parts[1].matches("\\d{1,7}")) return false;
         String check = digest(password, parts[2], Integer.parseInt(parts[1]));
         // 固定時間比較，避免時間側通道攻擊
         return MessageDigest.isEqual(check.getBytes(StandardCharsets.US_ASCII), parts[3].getBytes(StandardCharsets.US_ASCII));

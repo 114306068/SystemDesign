@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>登入｜Gig Radar</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>Gig Radar <span>演出雷達</span></h1>
+    <nav>
+      <a href="index.html">演出查詢</a>
+      <a href="slots.html">場地空檔</a>
+      <a href="/docs" target="_blank">API 文件</a>
+    </nav>
+  </header>
+
+  <main>
+    <p id="already" class="panel" hidden></p>
+    <div class="panels">
+      <section class="panel">
+        <h2>登入</h2>
+        <form id="login" class="stack">
+          <label>Email <input type="email" name="email" required autocomplete="username"></label>
+          <label>密碼 <input type="password" name="password" required autocomplete="current-password"></label>
+          <button type="submit">登入</button>
+        </form>
+        <p id="login-msg" class="msg"></p>
+        <p class="muted">示範帳號：audience@demo.tw / demo1234</p>
+      </section>
+
+      <section class="panel">
+        <h2>註冊新帳號</h2>
+        <form id="register" class="stack">
+          <label>暱稱 <input name="display_name" required maxlength="100"></label>
+          <label>Email <input type="email" name="email" required autocomplete="username"></label>
+          <label>密碼（至少 8 個字元）<input type="password" name="password" required minlength="8" autocomplete="new-password"></label>
+          <label>我是
+            <select name="role">
+              <option value="audience">觀眾（追蹤演出、收通知）</option>
+              <option value="performer">表演者（樂團）</option>
+              <option value="venue">場地方</option>
+            </select>
+          </label>
+          <button type="submit">註冊並登入</button>
+        </form>
+        <p id="register-msg" class="msg"></p>
+      </section>
+    </div>
+  </main>
+
+  <script src="app.js"></script>
+  <script>
+    meReady.then(me => {
+      if (!me) return;
+      const box = document.getElementById('already');
+      box.hidden = false;
+      box.innerHTML = `你已經以 <strong>${esc(me.display_name)}</strong> 登入。<a href="account.html">前往我的帳號 →</a>`;
+    });
+
+    const formData = form => Object.fromEntries(new FormData(form));
+
+    document.getElementById('login').addEventListener('submit', async ev => {
+      ev.preventDefault();
+      const msg = document.getElementById('login-msg');
+      try {
+        await api('/api/auth/login', { method: 'POST', body: formData(ev.target) });
+        location.href = 'account.html';
+      } catch (e) {
+        showMsg(msg, e.message);
+      }
+    });
+
+    document.getElementById('register').addEventListener('submit', async ev => {
+      ev.preventDefault();
+      const msg = document.getElementById('register-msg');
+      try {
+        await api('/api/auth/register', { method: 'POST', body: formData(ev.target) });
+        location.href = 'account.html';
+      } catch (e) {
+        showMsg(msg, e.message);
+      }
+    });
+  </script>
+</body>
+</html>

@@ -76,6 +76,9 @@ public class DemoData {
         User band = users.save(new User("band@demo.tw", "霧島樂隊（帳號）", UserRole.performer, PasswordHasher.hash(PASSWORD)));
         User venueOwner = users.save(new User("venue@demo.tw", "北岸 Live House（帳號）", UserRole.venue, PasswordHasher.hash(PASSWORD)));
         User admin = users.save(new User("admin@demo.tw", "平台管理者", UserRole.admin, PasswordHasher.hash(PASSWORD)));
+        audience.setPhone("0912-345-678");
+        audience.setDistrict("大安區");
+        audience.setFavoriteGenre("indie");
 
         List<Venue> v = new ArrayList<>();
         for (VenueSeed s : VENUES) {

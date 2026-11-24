@@ -59,6 +59,10 @@ erDiagram
         string password_hash
         string display_name
         enum role "audience/performer/venue/admin"
+        string phone "選填"
+        string district "選填, 所在地區"
+        string favorite_genre "選填, 喜好風格"
+        datetime updated_at
     }
     performers {
         int id PK
@@ -141,3 +145,4 @@ erDiagram
 4. **共演**：不另開資料表，`venue_slots.allow_co_performance` + `max_performers` 允許多組表演者申請同一空檔，成交場租平分寫在各自的 `match_requests.final_rent`。
 5. **抽成規則有歷史**：`commission_rules` 以 `effective_from` 保存每次調整，交易時把當下的比例存進 `transactions.commission_rate`，日後改規則不影響舊帳。
 6. **範疇外**：`orders.fulfillment` 保留 `shipping` 值，但宅配物流流程不實作；金流以 `transactions.payment_ref` 模擬。
+7. **登入與帳號**：四種角色共用 `users` 一張表，以 `role` 區分權限（Spring Security：`/api/admin/**` 限管理者、`/api/me/**` 需登入）。密碼只存 PBKDF2 雜湊；email 一律存小寫，登入不分大小寫。登入狀態存在伺服器 Session，「我的追蹤 / 通知」一律依登入者查詢，不從網址傳 user_id，避免看到別人的資料。
